@@ -46,9 +46,6 @@ migrations['002'] = {
     await db.schema
       .dropTable('post')
       .execute();
-    await db.schema
-      .dropIndex('post_indexedAt_cid_idx')
-      .execute();
   },
   async down(db: Kysely<unknown>) {
     await db.schema
