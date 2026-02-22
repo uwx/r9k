@@ -39,3 +39,28 @@ migrations['001'] = {
     await db.schema.dropTable('config').execute()
   },
 }
+
+// post no longer needed since we are using an in-memory ring buffer instead of the database for storing them
+migrations['002'] = {
+  async up(db: Kysely<unknown>) {
+    await db.schema
+      .dropTable('post')
+      .execute();
+    await db.schema
+      .dropIndex('post_indexedAt_cid_idx')
+      .execute();
+  },
+  async down(db: Kysely<unknown>) {
+    await db.schema
+      .createTable('post')
+      .addColumn('uri', 'varchar', (col) => col.primaryKey())
+      .addColumn('cid', 'varchar', (col) => col.notNull())
+      .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+      .execute()
+    await db.schema
+      .createIndex('post_indexedAt_cid_idx')
+      .on('post')
+      .columns(['indexedAt', 'cid'])
+      .execute()
+  },
+}

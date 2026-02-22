@@ -50,6 +50,9 @@ importers:
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
+      ring-buffer-ts:
+        specifier: ^1.2.0
+        version: 1.2.0
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
@@ -1100,6 +1103,9 @@ packages:
 
   reflect-metadata@0.1.14:
     resolution: {integrity: sha512-ZhYeb6nRaXCfhnndflDK8qI6ZQ/YcWZCISRAWICW9XYqMUwjZM9Z0DveWX/ABN01oxSHwVxKQmxeYZSsm0jh5A==}
+
+  ring-buffer-ts@1.2.0:
+    resolution: {integrity: sha512-dkGqA7YHZgXp1dWwcNIsmt+4EgHK1RmY9sp7eqHLLfTkhYhQQ4agAwqgED7hJakELMaXkBgZ5568vqaI3/wV6Q==}
 
   run-async@4.0.6:
     resolution: {integrity: sha512-IoDlSLTs3Yq593mb3ZoKWKXMNu3UpObxhgA/Xuid5p4bbfi2jdY1Hj0m1K+0/tEuQTxIGMhQDqGjKb7RuxGpAQ==}
@@ -2400,6 +2406,8 @@ snapshots:
   real-require@0.2.0: {}
 
   reflect-metadata@0.1.14: {}
+
+  ring-buffer-ts@1.2.0: {}
 
   run-async@4.0.6: {}
 

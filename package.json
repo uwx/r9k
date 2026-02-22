@@ -27,6 +27,7 @@
     "kysely-generic-sqlite": "^1.2.1",
     "msgpackr": "^1.11.8",
     "multiformats": "^9.9.0",
+    "ring-buffer-ts": "^1.2.0",
     "sharp": "^0.34.5"
   },
   "devDependencies": {

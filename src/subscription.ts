@@ -13,6 +13,7 @@ import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
 import { DidResolver } from '@atproto/identity'
 import { clampLuminosity, ClampValue, generateSignature } from './r9k/puzzle'
 import sharp from 'sharp'
+import { ringBuffer } from './r9k/ringbuffer'
 
 const didResolver = new DidResolver({})
 
@@ -117,9 +118,9 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
     const bloomFilter = await this.bloomFilter
 
-    const postsToDelete = ops.posts.deletes.map((del) => del.uri)
+    // const postsToDelete = ops.posts.deletes.map((del) => del.uri)
 
-    const postsToCreate: Array<{ uri: string, cid: string, indexedAt: string }> = [];
+    const postsToCreate: Array<{ uri: string, cid: string, indexedAt: Date }> = [];
     for (const create of ops.posts.creates) {
       if (!await checkRecord(bloomFilter, create.author, create.uri, create.record)) {
         continue;
@@ -128,22 +129,12 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       postsToCreate.push({
         uri: create.uri,
         cid: create.cid,
-        indexedAt: new Date().toISOString(),
+        indexedAt: new Date(),
       });
     }
 
-    if (postsToDelete.length > 0) {
-      await this.db
-        .deleteFrom('post')
-        .where('uri', 'in', postsToDelete)
-        .execute()
-    }
     if (postsToCreate.length > 0) {
-      await this.db
-        .insertInto('post')
-        .values(postsToCreate)
-        .onConflict((oc) => oc.doNothing())
-        .execute()
+      ringBuffer.add(...postsToCreate)
     }
 
     if (this.i++ % 100 == 0) {
