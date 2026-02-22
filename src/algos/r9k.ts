@@ -1,6 +1,6 @@
-import { QueryParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { AppContext } from '../config'
-import { ringBuffer } from '../r9k/ringbuffer'
+import type { QueryParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton.js'
+import type { AppContext } from '../config.js'
+import { ringBuffer } from '../r9k/ringbuffer.js'
 import { RingBuffer } from 'ring-buffer-ts'
 
 export const shortname = 'r9k'
@@ -32,7 +32,7 @@ export const handler = async (ctx: AppContext, params: QueryParams) => {
     iterator = iterator.filter((v) => v.indexedAt < timeStr)
   }
 
-  iterator = iterator.take(params.limit);
+  iterator = iterator.take(Math.min(params.limit, 100));
 
   const res = iterator.toArray();
 

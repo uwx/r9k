@@ -1,35 +1,41 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import express from 'express'
-import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
-import { isObj, hasProp } from '../../../../util'
+import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyUnspeccedDefs from './defs'
+import { validate as _validate } from '../../../../lexicons'
+import {
+  type $Typed,
+  is$typed as _is$typed,
+  type OmitKey,
+} from '../../../../util'
+import type * as AppBskyUnspeccedDefs from './defs.js'
 
-export interface QueryParams {
-  /** search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. For typeahead search, only simple term match is supported, not full syntax */
+const is$typed = _is$typed,
+  validate = _validate
+const id = 'app.bsky.unspecced.searchActorsSkeleton'
+
+export type QueryParams = {
+  /** Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. For typeahead search, only simple term match is supported, not full syntax. */
   q: string
-  /** if true, acts as fast/simple 'typeahead' query */
+  /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */
+  viewer?: string
+  /** If true, acts as fast/simple 'typeahead' query. */
   typeahead?: boolean
   limit: number
-  /** optional pagination mechanism; may not necessarily allow scrolling through entire result set */
+  /** Optional pagination mechanism; may not necessarily allow scrolling through entire result set. */
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  /** count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits */
+  /** Count of search hits. Optional, may be rounded/truncated, and may not be possible to paginate through all hits. */
   hitsTotal?: number
   actors: AppBskyUnspeccedDefs.SkeletonSearchActor[]
-  [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export type HandlerInput = void
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -44,13 +50,3 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-export type HandlerReqCtx<HA extends HandlerAuth = never> = {
-  auth: HA
-  params: QueryParams
-  input: HandlerInput
-  req: express.Request
-  res: express.Response
-}
-export type Handler<HA extends HandlerAuth = never> = (
-  ctx: HandlerReqCtx<HA>,
-) => Promise<HandlerOutput> | HandlerOutput

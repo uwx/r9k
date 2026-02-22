@@ -1,6 +1,6 @@
 import { ScalableBloomFilter } from 'bloom-filters'
-import { Database } from '../db'
-import { decode, encode } from 'msgpackr';
+import type { Database } from '../db/index.js';
+import { decode, encode } from 'msgpackr'
 
 export const bloomFilter = async (db: Database) => {
   const existing = await db.selectFrom('config')

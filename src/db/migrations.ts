@@ -1,4 +1,4 @@
-import { Kysely, Migration, MigrationProvider } from 'kysely'
+import { Kysely, type Migration, type MigrationProvider, sql } from 'kysely'
 
 const migrations: Record<string, Migration> = {}
 
@@ -60,5 +60,14 @@ migrations['002'] = {
       .on('post')
       .columns(['indexedAt', 'cid'])
       .execute()
+  },
+}
+
+migrations['003'] = {
+  async up(db: Kysely<unknown>) {
+    await sql`PRAGMA journal_mode = WAL;`.execute(db);
+  },
+  async down(db: Kysely<unknown>) {
+    await sql`PRAGMA journal_mode = DELETE;`.execute(db);
   },
 }

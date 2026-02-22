@@ -1,6 +1,6 @@
 import { Kysely, Migrator, SqliteDialect } from 'kysely'
-import { DatabaseSchema } from './schema'
-import { migrationProvider } from './migrations'
+import type { DatabaseSchema } from './schema.js'
+import { migrationProvider } from './migrations.js'
 
 import { DatabaseSync } from 'node:sqlite'
 import { buildQueryFn, GenericSqliteDialect, parseBigInt } from 'kysely-generic-sqlite'

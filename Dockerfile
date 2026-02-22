@@ -8,6 +8,8 @@ RUN corepack enable && corepack use pnpm@10
 
 RUN pnpm install
 
+RUN pnpx rolldown -c rolldown.config.js
+
 EXPOSE 3000
 
 ENV NODE_ENV production
