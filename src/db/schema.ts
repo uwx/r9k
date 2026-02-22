@@ -1,6 +1,7 @@
 export type DatabaseSchema = {
   post: Post
   sub_state: SubState
+  config: Config
 }
 
 export type Post = {
@@ -12,4 +13,9 @@ export type Post = {
 export type SubState = {
   service: string
   cursor: number
+}
+
+export type Config = {
+  key: string
+  value: Buffer
 }

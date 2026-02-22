@@ -21,9 +21,21 @@ migrations['001'] = {
       .addColumn('service', 'varchar', (col) => col.primaryKey())
       .addColumn('cursor', 'integer', (col) => col.notNull())
       .execute()
+    await db.schema
+      .createTable('config')
+      .addColumn('key', 'varchar', (col) => col.primaryKey())
+      .addColumn('value', 'blob', (col) => col.notNull())
+      .execute()
+    await db.schema
+      .createIndex('post_indexedAt_cid_idx')
+      .on('post')
+      .columns(['indexedAt', 'cid'])
+      .execute()
   },
   async down(db: Kysely<unknown>) {
+    await db.schema.dropIndex('post_indexedAt_cid_idx').execute()
     await db.schema.dropTable('post').execute()
     await db.schema.dropTable('sub_state').execute()
+    await db.schema.dropTable('config').execute()
   },
 }

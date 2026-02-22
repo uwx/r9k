@@ -4,11 +4,11 @@ WORKDIR /app
 
 COPY . .
 
-RUN yarn install
+RUN pnpm install
 
 EXPOSE 3000
 
 ENV NODE_ENV production
 
-# Use yarn to start the application
-CMD ["yarn", "start"]
+# Use pnpm to start the application
+CMD ["pnpm", "start"]
