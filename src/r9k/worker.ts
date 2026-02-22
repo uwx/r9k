@@ -10,11 +10,15 @@ import * as AppBskyFeedPost from '../lexicon/types/app/bsky/feed/post.js'
 import { bloomFilter as newBloomFilter, saveBloomFilter } from '../r9k/bloom.js'
 import { FirehoseSubscriptionBase, getOpsByType } from '../util/subscription.js'
 
-import { DidResolver } from '@atproto/identity'
+import { DidResolver, MemoryCache } from '@atproto/identity'
 import { clampLuminosity, ClampValue, generateSignature } from '../r9k/puzzle.js'
 import sharp from 'sharp'
 
-const didResolver = new DidResolver({})
+const didCache = new MemoryCache()
+const didResolver = new DidResolver({
+  plcUrl: 'https://plc.directory',
+  didCache,
+})
 
 async function getBlobAsBuffer(did: string, cid: string) {
   // inside the loop:
@@ -23,6 +27,13 @@ async function getBlobAsBuffer(did: string, cid: string) {
 
   const res = await fetch(
     `${pds}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`
+  )
+  return await res.arrayBuffer();
+}
+
+async function getBlobFromCdn(did: string, cid: string) {
+  const res = await fetch(
+    `https://cdn.bsky.app/img/feed_fullsize/plain/${did}/${cid}@jpeg`
   )
   return await res.arrayBuffer();
 }
@@ -57,7 +68,7 @@ async function checkRecord(
         bloomFilter.add(cid);
 
         try {
-          const buffer = await getBlobAsBuffer(author, cid);
+          const buffer = await getBlobFromCdn(author, cid);
           const sig = await generateSignature(sharp(buffer).resize(128, 128), {
             debug_makeGrayscale: true
           });
@@ -82,7 +93,7 @@ async function checkRecord(
       bloomFilter.add(cid);
 
       try {
-        const buffer = await getBlobAsBuffer(author, cid);
+        const buffer = await getBlobFromCdn(author, cid);
         const sig = await generateSignature(sharp(buffer).resize(128, 128), {
           debug_makeGrayscale: true
         });
