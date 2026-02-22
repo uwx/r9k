@@ -1,10 +1,11 @@
-import { ScalableBloomFilter } from 'bloom-filters'
+import { BaseFilter, ScalableBloomFilter } from 'bloom-filters'
 import { createDb, type Database } from '../db/index.js'
 import {
   type OutputSchema as RepoEvent,
   isCommit,
 } from '../lexicon/types/com/atproto/sync/subscribeRepos.js'
 import * as AppBskyEmbedRecordWithMedia from '../lexicon/types/app/bsky/embed/recordWithMedia.js'
+import * as AppBskyEmbedRecord from '../lexicon/types/app/bsky/embed/record.js'
 import * as AppBskyEmbedImages from '../lexicon/types/app/bsky/embed/images.js'
 import * as AppBskyFeedPost from '../lexicon/types/app/bsky/feed/post.js'
 import { bloomFilter as newBloomFilter, saveBloomFilter } from '../r9k/bloom.js'
@@ -13,6 +14,7 @@ import { FirehoseSubscriptionBase, getOpsByType } from '../util/subscription.js'
 import { DidResolver, MemoryCache } from '@atproto/identity'
 import { clampLuminosity, ClampValue, generateSignature } from '../r9k/puzzle.js'
 import sharp from 'sharp'
+import type { HashableInput } from 'bloom-filters/dist/utils.js'
 
 const didCache = new MemoryCache()
 const didResolver = new DidResolver({
@@ -38,6 +40,14 @@ async function getBlobFromCdn(did: string, cid: string) {
   return await res.arrayBuffer();
 }
 
+function tryAdd(bloomFilter: ClassicFilter<HashableInput>, element: HashableInput) {
+  if (bloomFilter.has(element)) {
+    return false;
+  }
+  bloomFilter.add(element);
+  return true;
+}
+
 async function checkRecord(
   bloomFilter: ScalableBloomFilter,
   author: string,
@@ -50,63 +60,71 @@ async function checkRecord(
   }
 
   const textLower = record.text.toLowerCase();
-  if (bloomFilter.has(textLower)) {
+  if (!tryAdd(bloomFilter, textLower)) {
     return false;
   }
-  bloomFilter.add(textLower);
 
-  if (record.embed && (record.embed.$type == 'app.bsky.embed.recordWithMedia' || record.embed.$type == 'app.bsky.embed.recordWithMedia#main')) {
-    const embed = record.embed as AppBskyEmbedRecordWithMedia.Main;
-    if (embed.media.$type == 'app.bsky.embed.images') {
-      const images = embed.media as AppBskyEmbedImages.Main;
+  if (record.embed && AppBskyEmbedRecordWithMedia.isMain(record.embed)) {
+    const embed = record.embed;
+    if (AppBskyEmbedImages.isMain(embed.media)) {
+      const images = embed.media;
       for (const image of images.images) {
         const cid = image.image.ref.toString();
         console.log(cid);
-        if (bloomFilter.has(cid)) {
+        if (!tryAdd(bloomFilter, cid)) {
           return false;
         }
-        bloomFilter.add(cid);
 
         try {
           const buffer = await getBlobFromCdn(author, cid);
-          const sig = await generateSignature(sharp(buffer).resize(128, 128), {
+          const sig = await generateSignature(sharp(buffer).resize({
+            width: 128,
+            height: 128,
+            kernel: 'nearest'
+          }), {
             debug_makeGrayscale: true
           });
-          if (bloomFilter.has(sig.buffer)) {
+
+          if (!tryAdd(bloomFilter, sig.buffer)) {
             return false;
           }
-          bloomFilter.add(sig.buffer);
         } catch (err) {
           console.error(`Failed to process image ${cid} for post ${uri}:`, err);
           return false;
         }
       }
     }
-  } else if (record.embed && (record.embed.$type == 'app.bsky.embed.images' || record.embed.$type == 'app.bsky.embed.images#main')) {
+  } else if (record.embed && AppBskyEmbedImages.isMain(record.embed)) {
     const images = record.embed as AppBskyEmbedImages.Main;
     for (const image of images.images) {
       const cid = image.image.ref.toString();
       console.log(cid);
-      if (bloomFilter.has(cid)) {
-        return false;
-      }
-      bloomFilter.add(cid);
+        if (!tryAdd(bloomFilter, cid)) {
+          return false;
+        }
 
       try {
         const buffer = await getBlobFromCdn(author, cid);
-        const sig = await generateSignature(sharp(buffer).resize(128, 128), {
+        const sig = await generateSignature(sharp(buffer).resize({
+          width: 128,
+          height: 128,
+          kernel: 'nearest'
+        }), {
           debug_makeGrayscale: true
         });
-        if (bloomFilter.has(sig.buffer)) {
+
+        if (!tryAdd(bloomFilter, sig.buffer)) {
           return false;
         }
-        bloomFilter.add(sig.buffer);
       } catch (err) {
         console.error(`Failed to process image ${cid} for post ${uri}:`, err);
         return false;
       }
     }
-  } // todo process record embed in record
+  } else if (record.embed && AppBskyEmbedRecord.isMain(record.embed)) {
+    const embed = record.embed;
+    // todo process record embed in record
+  }
 
   return true;
 }
@@ -160,6 +178,7 @@ import {
   workerData,
 } from 'node:worker_threads';
 import type { Config } from '../config.js'
+import type ClassicFilter from 'bloom-filters/dist/interfaces/classic-filter.js'
 
 if (isMainThread) {
   throw new Error('Called worker from main thread');

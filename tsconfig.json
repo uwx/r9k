@@ -9,7 +9,7 @@
     "module": "nodenext",
     "target": "ES6",
     "esModuleInterop": true,
-    "moduleResolution": "nodenext",
+    "moduleResolution": "bundler",
     "alwaysStrict": true,
     "allowUnreachableCode": false,
     "strictNullChecks": true,
