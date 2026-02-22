@@ -7,7 +7,7 @@ import {
 import * as AppBskyEmbedRecordWithMedia from './lexicon/types/app/bsky/embed/recordWithMedia'
 import * as AppBskyEmbedImages from './lexicon/types/app/bsky/embed/images'
 import * as AppBskyFeedPost from './lexicon/types/app/bsky/feed/post'
-import { bloomFilter, saveBloomFilter } from './r9k/bloom'
+import { bloomFilter as newBloomFilter, saveBloomFilter } from './r9k/bloom'
 import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
 
 import { DidResolver } from '@atproto/identity'
@@ -101,16 +101,17 @@ async function checkRecord(
 }
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
-  bloomFilter: Promise<ScalableBloomFilter>
+  bloomFilter?: Promise<ScalableBloomFilter>
   i = 0
 
   constructor(db: Database, service: string) {
     super(db, service)
-    this.bloomFilter = bloomFilter(db)
   }
 
   async handleEvent(evt: RepoEvent) {
     if (!isCommit(evt)) return
+
+    this.bloomFilter ??= newBloomFilter(this.db)
 
     const ops = await getOpsByType(evt)
 
