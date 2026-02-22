@@ -1,8 +1,10 @@
-FROM node:20
+FROM node:22
 
 WORKDIR /app
 
 COPY . .
+
+RUN corepack enable && corepack use pnpm@10
 
 RUN pnpm install
 
