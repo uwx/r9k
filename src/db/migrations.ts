@@ -45,6 +45,7 @@ migrations['002'] = {
   async up(db: Kysely<unknown>) {
     await db.schema
       .dropTable('post')
+      .ifExists()
       .execute();
   },
   async down(db: Kysely<unknown>) {
